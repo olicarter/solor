@@ -101,21 +101,21 @@ export default function Home() {
         </p>
         <p>
           <h4 className="font-bold inline">definition</h4> Solor, a whimsical
-          fusion of "solar" and "color," refers to the shade or hue that is most
-          suitable and harmonious for a specific time of day in a particular
-          geographical location. This term acknowledges the dynamic interplay
-          between the sun's position in the sky and the local environment,
-          recognizing that the color palette that complements a place can change
-          dramatically as the day progresses.
+          fusion of &quot;solar&quot; and &quot;color,&quot; refers to the shade
+          or hue that is most suitable and harmonious for a specific time of day
+          in a particular geographical location. This term acknowledges the
+          dynamic interplay between the sun&apos;s position in the sky and the
+          local environment, recognizing that the color palette that complements
+          a place can change dramatically as the day progresses.
         </p>
         <p>
-          <h4 className="font-bold inline">etymology</h4> "Solor" is a
-          portmanteau of "solar," relating to the sun, and "color," representing
-          the visual quality of an object as determined by its reflected or
-          transmitted light. This term encapsulates the notion that the ideal
-          color can be closely tied to the position of the sun during the day,
-          making it a perfect blend for the concept of time-specific color
-          choices.
+          <h4 className="font-bold inline">etymology</h4> &quot;Solor&quot; is a
+          portmanteau of &quot;solar,&quot; relating to the sun, and
+          &quot;color,&quot; representing the visual quality of an object as
+          determined by its reflected or transmitted light. This term
+          encapsulates the notion that the ideal color can be closely tied to
+          the position of the sun during the day, making it a perfect blend for
+          the concept of time-specific color choices.
         </p>
         <p>
           <h4 className="font-bold inline">example</h4> The solor of the walls
