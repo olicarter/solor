@@ -1,113 +1,197 @@
-import Image from 'next/image'
+'use client'
+
+import { useEffect, useState } from 'react'
+import { readableColor } from 'polished'
+import { addHours, differenceInMinutes, format, startOfToday } from 'date-fns'
+import SunCalc, { GetTimesResult } from 'suncalc'
+
+const config: Record<keyof GetTimesResult, { s: number; l: number }> = {
+  nadir: { s: 15, l: 15 },
+  nightEnd: { s: 25, l: 25 },
+  nauticalDawn: { s: 35, l: 35 },
+  dawn: { s: 45, l: 45 },
+  sunrise: { s: 55, l: 55 },
+  sunriseEnd: { s: 65, l: 65 },
+  goldenHourEnd: { s: 75, l: 75 },
+  solarNoon: { s: 85, l: 85 },
+  goldenHour: { s: 75, l: 75 },
+  sunsetStart: { s: 65, l: 65 },
+  sunset: { s: 55, l: 55 },
+  dusk: { s: 45, l: 45 },
+  nauticalDusk: { s: 35, l: 35 },
+  night: { s: 25, l: 25 },
+}
+
+const hue = 210
 
 export default function Home() {
+  const [now] = useState(new Date())
+  const [times, setTimes] = useState<
+    {
+      name: keyof GetTimesResult
+      date: Date
+      s: number
+      l: number
+    }[]
+  >()
+
+  useEffect(() => {
+    navigator.geolocation.getCurrentPosition(position => {
+      const lat = position.coords.latitude
+      const long = position.coords.longitude
+      const timesObj = SunCalc.getTimes(new Date(), lat, long)
+      setTimes(
+        // @ts-ignore
+        Object.entries(timesObj)
+          .sort(([, a], [, b]) => a.getTime() - b.getTime())
+          .map(([name, date]) => ({
+            name,
+            date,
+            s: config[name as keyof GetTimesResult].s,
+            l: config[name as keyof GetTimesResult].l,
+          })),
+      )
+    })
+  }, [])
+
+  if (times === undefined) return null
+
+  const getSLForDate = (date: Date) => {
+    const nowIndex = [...times, { name: 'now', date }]
+      .sort((a, b) => a.date.getTime() - b.date.getTime())
+      .findIndex(i => i.name === 'now')
+    const prevTime =
+      nowIndex === 0 ? times[times.length - 1] : times[nowIndex - 1]
+    const nextTime = nowIndex === times.length ? times[0] : times[nowIndex]
+    const percent =
+      differenceInMinutes(date, prevTime.date) /
+      differenceInMinutes(nextTime.date, prevTime.date)
+    return {
+      s: Math.round(
+        config[prevTime.name].s +
+          (config[nextTime.name].s - config[prevTime.name].s) * percent,
+      ),
+      l: Math.round(
+        config[prevTime.name].l +
+          (config[nextTime.name].l - config[prevTime.name].l) * percent,
+      ),
+    }
+  }
+
+  const { s: nowS, l: nowL } = getSLForDate(now)
+
+  document.querySelector(
+    'html',
+  )!.style.backgroundColor = `hsl(${hue}, ${nowS}%, ${nowL}%)`
+
   return (
-    <main className="flex min-h-screen flex-col items-center justify-between p-24">
-      <div className="z-10 max-w-5xl w-full items-center justify-between font-mono text-sm lg:flex">
-        <p className="fixed left-0 top-0 flex w-full justify-center border-b border-gray-300 bg-gradient-to-b from-zinc-200 pb-6 pt-8 backdrop-blur-2xl dark:border-neutral-800 dark:bg-zinc-800/30 dark:from-inherit lg:static lg:w-auto  lg:rounded-xl lg:border lg:bg-gray-200 lg:p-4 lg:dark:bg-zinc-800/30">
-          Get started by editing&nbsp;
-          <code className="font-mono font-bold">app/page.tsx</code>
+    <div className="cursor-default grid grid-cols-2 h-screen w-screen">
+      <div
+        className="flex flex-col gap-6 p-8 text-justify text-sm"
+        style={{
+          backgroundColor: `hsl(${hue}, ${nowS}%, ${nowL}%)`,
+          color: readableColor(`hsl(${hue}, ${Math.round(nowS)}%, ${nowL}%)`),
+        }}
+      >
+        <h1 className="font-semibold text-3xl">
+          solor <span className="text-sm">noun</span>
+        </h1>
+        <p>
+          <h4 className="font-bold inline">pronounciation</h4> /ˈso-lor/
         </p>
-        <div className="fixed bottom-0 left-0 flex h-48 w-full items-end justify-center bg-gradient-to-t from-white via-white dark:from-black dark:via-black lg:static lg:h-auto lg:w-auto lg:bg-none">
-          <a
-            className="pointer-events-none flex place-items-center gap-2 p-8 lg:pointer-events-auto lg:p-0"
-            href="https://vercel.com?utm_source=create-next-app&utm_medium=appdir-template&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            By{' '}
-            <Image
-              src="/vercel.svg"
-              alt="Vercel Logo"
-              className="dark:invert"
-              width={100}
-              height={24}
-              priority
-            />
-          </a>
-        </div>
+        <p>
+          <h4 className="font-bold inline">definition</h4> Solor, a whimsical
+          fusion of "solar" and "color," refers to the shade or hue that is most
+          suitable and harmonious for a specific time of day in a particular
+          geographical location. This term acknowledges the dynamic interplay
+          between the sun's position in the sky and the local environment,
+          recognizing that the color palette that complements a place can change
+          dramatically as the day progresses.
+        </p>
+        <p>
+          <h4 className="font-bold inline">etymology</h4> "Solor" is a
+          portmanteau of "solar," relating to the sun, and "color," representing
+          the visual quality of an object as determined by its reflected or
+          transmitted light. This term encapsulates the notion that the ideal
+          color can be closely tied to the position of the sun during the day,
+          making it a perfect blend for the concept of time-specific color
+          choices.
+        </p>
+        <p>
+          <h4 className="font-bold inline">example</h4> The solor of the walls
+          in our beachfront cottage shifted from a soft, sandy beige in the
+          morning to a tranquil seafoam green in the afternoon, creating a
+          serene atmosphere.
+        </p>
+        <p>
+          <h4 className="font-bold inline">example</h4> The designer selected a
+          warm, golden solor for the living room, inspired by the radiant hues
+          of the setting sun over the desert landscape.
+        </p>
+        <p>
+          <h4 className="font-bold inline">example</h4> When choosing outdoor
+          furniture, consider the solor of the local twilight to create a
+          backyard oasis that comes to life at dusk.
+        </p>
       </div>
+      <ul className="flex font-bold font-[monospace] font-xs leading-none relative">
+        <ul className="absolute bottom-0 flex flex-col top-0 p-1 z-10">
+          {new Array(24).fill(null).map((_, index) => {
+            const date = addHours(startOfToday(), index)
+            const { s, l } = getSLForDate(date)
+            return (
+              <span
+                key={index}
+                className="flex-1"
+                style={{
+                  color: readableColor(`hsl(${hue}, ${s}%, ${l}%)`),
+                }}
+              >
+                {format(date, 'HHmm').endsWith('00')
+                  ? format(date, 'HHmm')
+                  : null}
+              </span>
+            )
+          })}
+        </ul>
 
-      <div className="relative flex place-items-center before:absolute before:h-[300px] before:w-[480px] before:-translate-x-1/2 before:rounded-full before:bg-gradient-radial before:from-white before:to-transparent before:blur-2xl before:content-[''] after:absolute after:-z-20 after:h-[180px] after:w-[240px] after:translate-x-1/3 after:bg-gradient-conic after:from-sky-200 after:via-blue-200 after:blur-2xl after:content-[''] before:dark:bg-gradient-to-br before:dark:from-transparent before:dark:to-blue-700 before:dark:opacity-10 after:dark:from-sky-900 after:dark:via-[#0141ff] after:dark:opacity-40 before:lg:h-[360px] z-[-1]">
-        <Image
-          className="relative dark:drop-shadow-[0_0_0.3rem_#ffffff70] dark:invert"
-          src="/next.svg"
-          alt="Next.js Logo"
-          width={180}
-          height={37}
-          priority
-        />
-      </div>
-
-      <div className="mb-32 grid text-center lg:max-w-5xl lg:w-full lg:mb-0 lg:grid-cols-4 lg:text-left">
-        <a
-          href="https://nextjs.org/docs?utm_source=create-next-app&utm_medium=appdir-template&utm_campaign=create-next-app"
-          className="group rounded-lg border border-transparent px-5 py-4 transition-colors hover:border-gray-300 hover:bg-gray-100 hover:dark:border-neutral-700 hover:dark:bg-neutral-800/30"
-          target="_blank"
-          rel="noopener noreferrer"
+        <li
+          className="absolute flex justify-end p-1 w-full"
+          style={{
+            backgroundColor: `hsl(${hue}, ${config.night.s}%, ${config.night.l}%)`,
+            color: readableColor(
+              `hsl(${hue}, ${config.night.s}%, ${config.night.l}%)`,
+            ),
+            height: `${(Number(format(times[0].date, 'Hmm')) / 2400) * 100}%`,
+          }}
         >
-          <h2 className={`mb-3 text-2xl font-semibold`}>
-            Docs{' '}
-            <span className="inline-block transition-transform group-hover:translate-x-1 motion-reduce:transform-none">
-              -&gt;
-            </span>
-          </h2>
-          <p className={`m-0 max-w-[30ch] text-sm opacity-50`}>
-            Find in-depth information about Next.js features and API.
-          </p>
-        </a>
-
-        <a
-          href="https://nextjs.org/learn?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-          className="group rounded-lg border border-transparent px-5 py-4 transition-colors hover:border-gray-300 hover:bg-gray-100 hover:dark:border-neutral-700 hover:dark:bg-neutral-800/30"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <h2 className={`mb-3 text-2xl font-semibold`}>
-            Learn{' '}
-            <span className="inline-block transition-transform group-hover:translate-x-1 motion-reduce:transform-none">
-              -&gt;
-            </span>
-          </h2>
-          <p className={`m-0 max-w-[30ch] text-sm opacity-50`}>
-            Learn about Next.js in an interactive course with&nbsp;quizzes!
-          </p>
-        </a>
-
-        <a
-          href="https://vercel.com/templates?framework=next.js&utm_source=create-next-app&utm_medium=appdir-template&utm_campaign=create-next-app"
-          className="group rounded-lg border border-transparent px-5 py-4 transition-colors hover:border-gray-300 hover:bg-gray-100 hover:dark:border-neutral-700 hover:dark:bg-neutral-800/30"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <h2 className={`mb-3 text-2xl font-semibold`}>
-            Templates{' '}
-            <span className="inline-block transition-transform group-hover:translate-x-1 motion-reduce:transform-none">
-              -&gt;
-            </span>
-          </h2>
-          <p className={`m-0 max-w-[30ch] text-sm opacity-50`}>
-            Explore the Next.js 13 playground.
-          </p>
-        </a>
-
-        <a
-          href="https://vercel.com/new?utm_source=create-next-app&utm_medium=appdir-template&utm_campaign=create-next-app"
-          className="group rounded-lg border border-transparent px-5 py-4 transition-colors hover:border-gray-300 hover:bg-gray-100 hover:dark:border-neutral-700 hover:dark:bg-neutral-800/30"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <h2 className={`mb-3 text-2xl font-semibold`}>
-            Deploy{' '}
-            <span className="inline-block transition-transform group-hover:translate-x-1 motion-reduce:transform-none">
-              -&gt;
-            </span>
-          </h2>
-          <p className={`m-0 max-w-[30ch] text-sm opacity-50`}>
-            Instantly deploy your Next.js site to a shareable URL with Vercel.
-          </p>
-        </a>
-      </div>
-    </main>
+          0000
+        </li>
+        {times.map(({ name, date }, index) => {
+          const time = config[name]
+          return (
+            <li
+              key={name}
+              className="absolute flex justify-end p-1 w-full"
+              style={{
+                backgroundColor: `hsl(${hue}, ${time.s}%, ${time.l}%)`,
+                color: readableColor(`hsl(${hue}, ${time.s}%, ${time.l}%)`),
+                height: `${
+                  (((index === times.length - 1
+                    ? 2400
+                    : Number(format(times[index + 1].date, 'Hmm'))) -
+                    Number(format(date, 'Hmm'))) /
+                    2400) *
+                  100
+                }%`,
+                top: `${(Number(format(date, 'Hmm')) / 2400) * 100}%`,
+              }}
+            >
+              {format(date, 'HHmm')}
+            </li>
+          )
+        })}
+      </ul>
+    </div>
   )
 }
